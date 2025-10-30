@@ -31,6 +31,22 @@ Combines Flutter frontend, Supabase backend with PostgreSQL, and Google Gemini A
 - Assignment tracker, Pomodoro timer, LaTeX math editor  
 - Encrypted Gemini API key storage, two-factor authentication  
 
+### 2.3 Pricing Model  
+**Free Tier:**
+- 100 pages/month with AI processing
+- 5GB storage per user
+- User-provided Gemini API keys (no platform costs for AI)
+- Basic features: note upload, timeline, AI conversion, flashcards, collaboration
+- Automated quota tracking and alerts
+
+**Premium Tier (Future Enhancement):**
+- Unlimited pages per month
+- 50GB+ storage
+- Priority customer support
+- Advanced AI features: concept maps, adaptive quizzes, personalized recommendations
+- Enhanced collaboration tools
+- Ad-free experience
+
 ---
 
 ## 3. Functional Requirements
@@ -49,7 +65,11 @@ Combines Flutter frontend, Supabase backend with PostgreSQL, and Google Gemini A
 - Handwriting-to-text conversion with high accuracy  
 - Summarization preview and editable flashcards/quizzes  
 - Auto-tagging and concept map creation  
-- User-supplied and encrypted Gemini API keys  
+- User-supplied and encrypted Gemini API keys
+- API credit monitoring dashboard showing usage statistics
+- Alert system when API credits running low (quota exceeded errors detected)
+- Error handling and user guidance when API quota exceeded
+- Usage statistics per user (tokens used, estimated costs, success rates)  
 
 ### 3.4 Collaboration  
 - Real-time multi-user editing and presence avatars  
@@ -75,6 +95,15 @@ Combines Flutter frontend, Supabase backend with PostgreSQL, and Google Gemini A
 - Encrypted Gemini API keys stored securely  
 - Password protection per note or folder  
 - Data export and recovery options  
+
+### 3.9 Quota Management  
+- Track monthly page uploads per user
+- Enforce 100-page limit for free tier
+- Display usage dashboard (pages used, storage used, API calls made)
+- Alert users at 80% and 100% quota usage
+- Graceful degradation when quotas exceeded (read-only mode for notes)
+- Reset quotas monthly on the 1st of each month
+- Premium tier users have unlimited pages
 
 ---
 
@@ -114,6 +143,15 @@ Combines Flutter frontend, Supabase backend with PostgreSQL, and Google Gemini A
 - Password protection toggle UI  
 - Encrypted key management dashboard  
 
+### 4.9 Quota Management Interface  
+- Usage dashboard showing current month consumption
+- Progress bars for pages, storage, API calls
+- Upgrade prompts when approaching limits (80%, 100%)
+- Settings page to manage API keys with credit status display
+- Alert banners when quotas exceeded
+- Monthly quota reset notification
+- Tier badge display (Free/Premium)
+
 ---
 
 ## 5. Non-Functional Requirements
@@ -122,7 +160,10 @@ Combines Flutter frontend, Supabase backend with PostgreSQL, and Google Gemini A
 - Scalable backend with low latency  
 - Accessibility compliance (WCAG), GDPR aligned  
 - Minimalistic, responsive UI with dark/light mode  
-- Secure integration with Google Gemini AI  
+- Secure integration with Google Gemini AI
+- Cost-efficient architecture using Supabase free tier (500MB DB, 1GB storage, 2GB bandwidth initially)
+- Automated quota tracking and enforcement
+- Efficient image compression to reduce storage costs  
 
 ---
 

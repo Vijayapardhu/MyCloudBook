@@ -1,0 +1,39 @@
+At line:1 char:167
++ ... ct -Line).Lines}}, @{Name='SizeKB';Expression={[math]::Round(.Length/ ...
++                                                                  ~
+Missing ')' in method call.
+At line:1 char:167
++ ... ines}}, @{Name='SizeKB';Expression={[math]::Round(.Length/1KB, 2)}} | ...
++                                                       ~~~~~~~~~~~
+Unexpected token '.Length/1KB' in expression or statement.
+At line:1 char:178
++ ... nes}}, @{Name='SizeKB';Expression={[math]::Round(.Length/1KB, 2)}} |  ...
++                                                                 ~
+Missing argument in parameter list.
+At line:1 char:152
++ ... | Measure-Object -Line).Lines}}, @{Name='SizeKB';Expression={[math]:: ...
++                                                                 ~
+Missing closing '}' in statement block or type definition.
+At line:1 char:181
++ ... s}}, @{Name='SizeKB';Expression={[math]::Round(.Length/1KB, 2)}} | Fo ...
++                                                                  ~
+The hash literal was incomplete.
+At line:1 char:181
++ ... }}, @{Name='SizeKB';Expression={[math]::Round(.Length/1KB, 2)}} | For ...
++                                                                 ~
+Unexpected token ')' in expression or statement.
+At line:1 char:182
++ ... }, @{Name='SizeKB';Expression={[math]::Round(.Length/1KB, 2)}} | Form ...
++                                                                 ~
+Unexpected token '}' in expression or statement.
+At line:1 char:183
++ ... , @{Name='SizeKB';Expression={[math]::Round(.Length/1KB, 2)}} | Forma ...
++                                                                 ~
+Unexpected token '}' in expression or statement.
+At line:1 char:185
++ ... @{Name='SizeKB';Expression={[math]::Round(.Length/1KB, 2)}} | Format- ...
++                                                                 ~
+An empty pipe element is not allowed.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingEndParenthesisInMethodCall
+ 

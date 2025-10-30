@@ -1,0 +1,196 @@
+Resolving dependencies...
+Downloading packages...
++ _fe_analyzer_shared 88.0.0 (92.0.0 available)
++ _flutterfire_internals 1.3.35 (1.3.63 available)
++ analyzer 8.1.1 (9.0.0 available)
++ app_links 6.4.1
++ app_links_linux 1.0.3
++ app_links_platform_interface 2.0.2
++ app_links_web 1.0.4
++ archive 4.0.7
++ args 2.7.0
++ asn1lib 1.6.5
++ audioplayers 5.2.1 (6.5.1 available)
++ audioplayers_android 4.0.3 (5.2.1 available)
++ audioplayers_darwin 5.0.2 (6.3.0 available)
++ audioplayers_linux 3.1.0 (4.2.1 available)
++ audioplayers_platform_interface 6.1.0 (7.1.1 available)
++ audioplayers_web 4.1.0 (5.1.1 available)
++ audioplayers_windows 3.1.0 (4.2.1 available)
++ barcode 2.2.9
++ bidi 2.0.13
++ bloc 8.1.4 (9.1.0 available)
++ build 4.0.2
++ build_config 1.2.0
++ build_daemon 4.1.0
++ build_runner 2.10.1
++ built_collection 5.1.1
++ built_value 8.12.0
++ cached_network_image 3.4.1
++ cached_network_image_platform_interface 4.1.1
++ cached_network_image_web 1.3.1
+  characters 1.4.0 (1.4.1 available)
++ checked_yaml 2.0.4
++ code_builder 4.11.0
++ connectivity_plus 5.0.2 (7.0.0 available)
++ connectivity_plus_platform_interface 1.2.4 (2.0.1 available)
++ convert 3.1.2
++ cross_file 0.3.5
++ crypto 3.0.6
++ dart_style 3.1.2
++ dbus 0.7.11
++ dio 5.9.0
++ dio_web_adapter 2.1.1
++ encrypt 5.0.3
++ equatable 2.0.7
++ ffi 2.1.4
++ file 7.0.1
++ file_selector_linux 0.9.3+2
++ file_selector_macos 0.9.4+4 (0.9.4+5 available)
++ file_selector_platform_interface 2.6.2
++ file_selector_windows 0.9.3+4
++ firebase_core 2.32.0 (4.2.0 available)
++ firebase_core_platform_interface 5.4.2 (6.0.2 available)
++ firebase_core_web 2.24.0 (3.2.0 available)
++ firebase_messaging 14.7.10 (16.0.3 available)
++ firebase_messaging_platform_interface 4.5.37 (4.7.3 available)
++ firebase_messaging_web 3.5.18 (4.0.3 available)
++ fixnum 1.1.1
++ fl_chart 0.66.2 (1.1.1 available)
++ flutter_bloc 8.1.6 (9.1.1 available)
++ flutter_cache_manager 3.4.1
+  flutter_lints 5.0.0 (6.0.0 available)
++ flutter_math_fork 0.7.4
++ flutter_plugin_android_lifecycle 2.0.31 (2.0.32 available)
++ flutter_secure_storage 9.2.4
++ flutter_secure_storage_linux 1.2.3 (2.0.1 available)
++ flutter_secure_storage_macos 3.1.3 (4.0.0 available)
++ flutter_secure_storage_platform_interface 1.1.2 (2.0.1 available)
++ flutter_secure_storage_web 1.2.1 (2.0.0 available)
++ flutter_secure_storage_windows 3.1.2 (4.0.0 available)
++ flutter_staggered_grid_view 0.7.0
++ flutter_svg 2.2.1
++ flutter_web_plugins 0.0.0 from sdk flutter
++ functions_client 2.5.0
++ glob 2.1.3
++ go_router 13.2.5 (16.3.0 available)
++ gotrue 2.16.0
++ graphs 2.3.2
++ gtk 2.1.0
++ hive 2.2.3
++ hive_flutter 1.1.0
++ http 1.5.0
++ http_multi_server 3.2.2
++ http_parser 4.1.2
++ hydrated_bloc 9.1.5 (10.1.1 available)
++ image 4.5.4
++ image_picker 1.2.0
++ image_picker_android 0.8.13+1 (0.8.13+7 available)
++ image_picker_for_web 3.1.0
++ image_picker_ios 0.8.13 (0.8.13+1 available)
++ image_picker_linux 0.2.2
++ image_picker_macos 0.2.2 (0.2.2+1 available)
++ image_picker_platform_interface 2.11.1
++ image_picker_windows 0.2.2
++ intl 0.19.0 (0.20.2 available)
++ io 1.0.5
++ js 0.6.7 (0.7.2 available)
++ json_annotation 4.9.0
++ jwt_decode 0.3.1
+  leak_tracker 10.0.9 (11.0.2 available)
+  leak_tracker_flutter_testing 3.0.9 (3.0.10 available)
+  leak_tracker_testing 3.0.1 (3.0.2 available)
+  lints 5.1.1 (6.0.0 available)
++ logging 1.3.0
+  material_color_utilities 0.11.1 (0.13.0 available)
+  meta 1.16.0 (1.17.0 available)
++ mime 2.0.0
++ mockito 5.5.1
++ nested 1.0.0
++ nm 0.5.0
++ octo_image 2.1.0
++ package_config 2.2.0
++ path_parsing 1.1.0
++ path_provider 2.1.5
++ path_provider_android 2.2.19 (2.2.20 available)
++ path_provider_foundation 2.4.2 (2.4.3 available)
++ path_provider_linux 2.2.1
++ path_provider_platform_interface 2.1.2
++ path_provider_windows 2.3.0
++ pdf 3.11.3
++ pdf_widget_wrapper 1.0.4
++ petitparser 7.0.1
++ platform 3.1.6
++ plugin_platform_interface 2.1.8
++ pointycastle 3.9.1 (4.0.0 available)
++ pool 1.5.2
++ posix 6.0.3
++ postgrest 2.5.0
++ printing 5.14.2
++ provider 6.1.5+1
++ pub_semver 2.2.0
++ pubspec_parse 1.5.0
++ pull_to_refresh 2.0.0
++ qr 3.0.2
++ realtime_client 2.6.0
++ record 5.2.1 (6.1.2 available)
++ record_android 1.4.4
++ record_darwin 1.2.2
++ record_linux 0.7.2 (1.2.1 available)
++ record_platform_interface 1.4.0
++ record_web 1.2.1
++ record_windows 1.0.7
++ retry 3.1.2
++ rxdart 0.28.0
++ shared_preferences 2.5.3
++ shared_preferences_android 2.4.13 (2.4.15 available)
++ shared_preferences_foundation 2.5.4 (2.5.5 available)
++ shared_preferences_linux 2.4.1
++ shared_preferences_platform_interface 2.4.1
++ shared_preferences_web 2.4.3
++ shared_preferences_windows 2.4.1
++ shelf 1.4.2
++ shelf_web_socket 3.0.0
++ shimmer 3.0.0
++ source_gen 4.0.2
++ sprintf 7.0.0
++ sqflite 2.4.2
++ sqflite_android 2.4.1 (2.4.2+2 available)
++ sqflite_common 2.5.6
++ sqflite_darwin 2.4.2
++ sqflite_platform_interface 2.4.0
++ storage_client 2.4.1
++ stream_transform 2.1.1
++ supabase 2.10.0
++ supabase_flutter 2.10.3
++ synchronized 3.4.0
+  test_api 0.7.4 (0.7.7 available)
++ timeago 3.7.1
++ tuple 2.0.2
++ typed_data 1.4.0
++ url_launcher 6.3.2
++ url_launcher_android 6.3.20 (6.3.24 available)
++ url_launcher_ios 6.3.4 (6.3.5 available)
++ url_launcher_linux 3.2.1
++ url_launcher_macos 3.2.3 (3.2.4 available)
++ url_launcher_platform_interface 2.3.2
++ url_launcher_web 2.4.1
++ url_launcher_windows 3.1.4
++ uuid 4.5.1
++ vector_graphics 1.1.19
++ vector_graphics_codec 1.1.13
++ vector_graphics_compiler 1.1.19
+  vector_math 2.1.4 (2.2.0 available)
+  vm_service 15.0.0 (15.0.2 available)
++ watcher 1.1.4
++ web 1.1.1
++ web_socket 1.0.1
++ web_socket_channel 3.0.3
++ win32 5.15.0
++ xdg_directories 1.1.0
++ xml 6.6.1
++ yaml 3.1.3
++ yet_another_json_isolate 2.1.0
+Changed 180 dependencies!
+57 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.

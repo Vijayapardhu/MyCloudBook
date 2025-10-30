@@ -1,0 +1,58 @@
+
+
+    Directory: C:\Users\PARDHU\Desktop\projects\MyCloudBook\lib\core
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----        30-10-2025     21:06                config                                                               
+d-----        30-10-2025     21:06                constants                                                            
+d-----        30-10-2025     21:06                theme                                                                
+d-----        30-10-2025     21:06                utils                                                                
+d-----        30-10-2025     21:06                errors                                                               
+
+
+    Directory: C:\Users\PARDHU\Desktop\projects\MyCloudBook\lib\data
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----        30-10-2025     21:06                models                                                               
+d-----        30-10-2025     21:06                repositories                                                         
+
+
+    Directory: C:\Users\PARDHU\Desktop\projects\MyCloudBook\lib\data\datasources
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----        30-10-2025     21:06                local                                                                
+d-----        30-10-2025     21:06                remote                                                               
+
+
+    Directory: C:\Users\PARDHU\Desktop\projects\MyCloudBook\lib\data
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----        30-10-2025     21:06                services                                                             
+
+
+    Directory: C:\Users\PARDHU\Desktop\projects\MyCloudBook\lib\presentation
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----        30-10-2025     21:06                blocs                                                                
+d-----        30-10-2025     21:06                screens                                                              
+d-----        30-10-2025     21:06                widgets                                                              
+
+
+    Directory: C:\Users\PARDHU\Desktop\projects\MyCloudBook\lib
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----        30-10-2025     21:06                domain                                                               
+
+
