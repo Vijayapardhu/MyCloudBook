@@ -1,198 +1,177 @@
-Software Requirements Specification (SRS)
-MyCloudBook - AI-Powered Digital Notebook Platform
-1. Introduction
-1.1 Purpose
-This document details requirements for MyCloudBook, a cross-platform Flutter app that digitizes, organizes, and enhances handwritten notes using Google Gemini AI. It targets students and professionals, allowing handwriting-to-text conversion, AI summarization, collaborative editing, and offline functionality.
+# Software Requirements Specification (SRS)  
+## MyCloudBook - AI-Powered Digital Notebook Platform
 
-1.2 Scope
-MyCloudBook supports image uploads of handwritten notes forming a timeline, rough work attachments, AI-powered study aids, real-time collaboration, secure API key storage, and seamless offline-online sync, deployed on iOS, Android, and Web with Flutter.
+---
 
-1.3 Intended Audience
+## 1. Introduction
+
+### 1.1 Purpose  
+This document details requirements for MyCloudBook, a cross-platform Flutter app that digitizes, organizes, and enhances handwritten notes using Google Gemini AI. It targets students and professionals, enabling handwriting-to-text conversion, AI summarization, collaborative editing, and offline functionality.
+
+### 1.2 Scope  
+MyCloudBook supports image uploads of handwritten notes in a timeline, rough work attachments, AI-powered study aids, real-time collaboration, secure API key storage, and seamless offline-online sync, deployed on iOS, Android, and Web with Flutter.
+
+### 1.3 Intended Audience  
 App developers, UI/UX designers, AI engineers, project managers, and stakeholders.
 
-2. General Description
-2.1 Product Perspective
-Combines Flutter frontend, Supabase backend, and Google Gemini AI via user API keys (encrypted) to offer a unified study platform.
+---
+
+## 2. General Description
+
+### 2.1 Product Perspective  
+Combines Flutter frontend, Supabase backend with PostgreSQL, and Google Gemini AI API using encrypted user-provided keys, creating a connected study environment.
+
+### 2.2 Product Features Summary  
+- Daily handwritten page uploads in timeline flow  
+- Rough work linked pages and toggle views  
+- Gemini AI handwriting recognition, summarization, flashcards, quizzes  
+- Real-time collaboration with role-based permissions and chat  
+- Offline mode with sync and conflict resolution  
+- PDF batch export with customizable options  
+- Assignment tracker, Pomodoro timer, LaTeX math editor  
+- Encrypted Gemini API key storage, two-factor authentication  
 
-2.2 Product Features Summary
-Daily-page uploads in a continuous timeline flow
+---
+
+## 3. Functional Requirements
+
+### 3.1 User Authentication  
+- Email/password and social login  
+- Two-factor authentication and password recovery  
+
+### 3.2 Note Management  
+- Upload handwritten pages via camera or gallery  
+- Attach and toggle rough work/scratchpad pages  
+- Visual timeline with page continuation and drag-drop reorder  
+- Auto-create daily note templates with date markers  
+
+### 3.3 AI Integration (Google Gemini AI)  
+- Handwriting-to-text conversion with high accuracy  
+- Summarization preview and editable flashcards/quizzes  
+- Auto-tagging and concept map creation  
+- User-supplied and encrypted Gemini API keys  
+
+### 3.4 Collaboration  
+- Real-time multi-user editing and presence avatars  
+- Dedicated chat on notes and notebooks  
+- Role-based access: view/comment/edit  
+- Notifications for comments and chat activity  
+
+### 3.5 Productivity Tools  
+- Assignment/task tracking dashboard  
+- Pomodoro timer and study streak analytics  
+- LaTeX editor for math equations  
+- Citation and reference manager  
+
+### 3.6 Export & Import  
+- Batch PDF export of notes/folders including images and annotations  
+- Import PDFs and slides for annotation  
 
-Rough work linked pages toggle
+### 3.7 Offline Support  
+- Local caching with automatic sync when online  
+- Conflict resolution UI for multi-device edits  
 
-Gemini AI handwriting recognition, summarization, and flashcard generation
+### 3.8 Security  
+- Encrypted Gemini API keys stored securely  
+- Password protection per note or folder  
+- Data export and recovery options  
 
-Real-time collaboration and chat with role-based permissions
+---
 
-Offline mode with sync and conflict resolution
+## 4. Additional Features (UI/UX Enhancements)
 
-PDF batch export with customizable settings
+### 4.1 Rough Work Pages  
+- Attach rough work pages linked visually to main notes  
+- Toggle rough work view without clutter  
 
-Assignment tracking, Pomodoro timer, LaTeX math editor
+### 4.2 Timeline Continuity  
+- Visual timeline with continuation arrows  
+- Drag-and-drop page reordering  
 
-Encrypted Gemini API key storage, two-factor auth
+### 4.3 AI Utilities Panel  
+- Side panel for handwriting conversion status, summary edits, tags, and revision tips  
 
-3. Functional Requirements
-3.1 User Authentication
-Email/password and social login
+### 4.4 Collaboration Interface  
+- Real-time avatars and typing indicators  
+- Comment threads on specific note sections  
+- Sharing and permissions modal  
+- Notification badges for activity  
 
-Two-factor authentication and password recovery
+### 4.5 Sync & Offline Mode  
+- Sync status indicators and offline banners  
+- Manual upload button and conflict resolution dialogs  
 
-3.2 Note Management
-Handwritten page uploads (camera/gallery)
+### 4.6 PDF Export UI  
+- Multi-select export UI with progress modal and customizable settings  
 
-Link and toggle rough work/scratchpad pages
+### 4.7 Mobile-Specific UI  
+- Pinch-to-zoom controls on notes  
+- Voice memo recording and playback  
+- Quick shortcuts for new note pages and rough work  
 
-Timeline with page continuation and drag-drop reorder
+### 4.8 Security UI  
+- Two-factor authentication setup wizard  
+- Password protection toggle UI  
+- Encrypted key management dashboard  
 
-Auto-day template with date markers
+---
 
-3.3 AI Integration (Google Gemini AI)
-Handwriting-to-text conversion with high accuracy
+## 5. Non-Functional Requirements
 
-AI summarization, editable flashcards, quizzes
+- Flutter for cross-platform performance (iOS, Android, Web)  
+- Scalable backend with low latency  
+- Accessibility compliance (WCAG), GDPR aligned  
+- Minimalistic, responsive UI with dark/light mode  
+- Secure integration with Google Gemini AI  
 
-Smart auto-tagging and concept map linking
+---
 
-User-supplied and encrypted Gemini API key storage
+## 6. UI/UX Design Specifications
 
-3.4 Collaboration
-Real-time multi-user editing and presence indicators
+### 6.1 Core Screens  
+- Timeline with dates and visual continuity  
+- Note pages with rough work toggle and AI utilities panel  
+- Collaboration chat overlay with real-time indicators  
+- Sync/offline mode UI elements  
+- API key input with encryption feedback  
 
-Dedicated chat on notes and notebooks
+### 6.2 Interaction Patterns  
+- Drag-and-drop page reordering  
+- Pinch-to-zoom and swipe navigation  
+- Contextual AI suggestions and summary edits  
+- Notification badges and modal dialogs  
 
-Role-based access: view/comment/edit
+---
 
-Notification for comments and chat activity
+## 7. System Architecture & Technologies
 
-3.5 Productivity Tools
-Assignment/task tracker dashboard
+| Layer        | Technology                          |
+|--------------|-----------------------------------|
+| Frontend     | Flutter/Dart                      |
+| Backend      | Supabase with PostgreSQL          |
+| AI Services  | Google Gemini API (encrypted keys)|
+| Storage      | Cloud storage with offline sync   |
+| Authentication | Supabase Auth, Two-factor auth  |
 
-Pomodoro timer and study streak analytics
+---
 
-LaTeX mathematical equations editor
+## 8. User Stories & Acceptance Criteria
 
-Citation and reference management
+- Users upload handwritten notes in timeline sequence & toggle rough work pages  
+- AI generates summaries & flashcards within seconds  
+- Collaborators edit and chat in real-time with presence indicators  
+- Offline edits sync seamlessly with conflict resolution  
+- Secure, encrypted API key management per user  
 
-3.6 Export & Import
-Batch PDF export of notes/folders (with images and annotations)
+---
 
-Import PDFs/slides for annotation
+## 9. Constraints & Assumptions
 
-3.7 Offline Support
-Local caching with sync on reconnect
+- Valid Google Gemini API key from users mandatory for AI  
+- Internet required for collaboration & AI; offline mode has limited features  
+- Compliance with data privacy and security standards  
 
-Conflict resolution UI for multi-device edits
+---
 
-3.8 Security
-Encrypted Gemini API keys storage
-
-Password protection per note/folder
-
-Comprehensive data export and recovery
-
-4. Missing Features Added
-4.1 Rough Work Pages UI
-Attachment interface between core notes and rough work pages
-
-Toggle and view separation with visual linkage
-
-4.2 Timeline Continuity UI
-Visual continuous timeline with arrows
-
-Drag-and-drop page rearrangement
-
-4.3 AI Utilities Panel UI
-Side panel for conversion status, summarization edits, smart tags, and revision tips
-
-4.4 Collaboration UI
-Real-time collaborator avatars and typing indicators
-
-Comment thread overlays and notification badges
-
-Sharing modal with role-based permission settings
-
-4.5 Sync & Offline Mode Indicators
-Visual sync status and offline banners
-
-Manual upload buttons
-
-Conflict resolution dialogues
-
-4.6 PDF Export Flow
-Multi-select note/folder export UI
-
-Export progress modal with customizable settings
-
-4.7 Mobile-Specific UI
-Pinch-to-zoom gestures for note pages
-
-Voice memos recording/playback controls
-
-Quick action shortcuts for note/rough work add
-
-4.8 Security & Privacy UI
-Two-factor auth setup wizard
-
-Password protection toggles
-
-Encrypted key management and data recovery dashboards
-
-5. Non-Functional Requirements
-Flutter for iOS, Android, and Web cross-platform support
-
-Scalable backend with Supabase real-time sync
-
-Accessibility compliance (WCAG), GDPR, and privacy regulations
-
-Responsive, minimalistic UI with dark/light mode
-
-Low latency AI processing with Google Gemini integration
-
-6. UI/UX Design Specifications
-6.1 Core Screens
-Timeline with date headers and visual continuity
-
-Note page with rough work toggle and AI utilities panel
-
-Collaboration chat overlay and real-time user indicators
-
-Sync and offline mode banners
-
-API key entry modal with encryption feedback
-
-6.2 Interaction Patterns
-Drag-and-drop reordering
-
-Pinch to zoom and swipe page navigation
-
-Contextual AI suggestions and editable summaries
-
-Notification badges and modal dialogues
-
-7. System Architecture & Technologies
-Frontend: Flutter/Dart cross-platform UI
-
-Backend: Supabase with PostgreSQL, authentication, and real-time updates
-
-AI Services: Google Gemini API with encrypted per-user keys
-
-Storage: Cloud-based with offline sync and conflict management
-
-8. User Stories & Acceptance Criteria
-Users upload handwritten notes in timeline order and toggle rough work pages
-
-AI generates summaries and flashcards within seconds
-
-Collaborators edit notes in real-time with presence indicators and chat
-
-Offline edits sync automatically with conflict resolution support
-
-Secure API keys encrypt in the database with exclusive user access
-
-9. Assumptions & Constraints
-Users provide a valid Google Gemini API key for AI features
-
-Internet needed for collaboration and AI features; offline mode supports limited local operation
-
-Data privacy and security protections align with best industry standards
+*This SRS guides the development of MyCloudBook ensuring all features and UI/UX elements meet user needs in a secure, scalable, and user-friendly Flutter-based app integrated with Google Gemini AI.*
 
