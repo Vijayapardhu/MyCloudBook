@@ -124,8 +124,8 @@ class TimelineScreen extends StatelessWidget {
                             final isGrid = width >= 800;
                             
                             if (!isGrid) {
-                              // List view with date grouping
-                              final items = <Widget>[];
+                              // Build a flat list of timeline items
+                              final timelineItems = <_TimelineItem>[];
                               
                               for (var i = 0; i < sortedDates.length; i++) {
                                 final date = sortedDates[i];
@@ -139,42 +139,64 @@ class TimelineScreen extends StatelessWidget {
                                     date.difference(previousDate).inDays == 1;
                                 
                                 // Add date header
-                                items.add(
-                                  DateGroupHeader(
-                                    date: date,
-                                    noteCount: dateNotes.length,
-                                    showContinuation: showContinuation,
-                                  ),
-                                );
+                                timelineItems.add(_TimelineItem(
+                                  type: _TimelineItemType.header,
+                                  date: date,
+                                  dateIndex: i,
+                                  noteCount: dateNotes.length,
+                                  showContinuation: showContinuation,
+                                ));
                                 
                                 // Add notes for this date
                                 for (var j = 0; j < dateNotes.length; j++) {
-                                  items.add(
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 6,
-                                      ),
-                                      child: _NoteTile(note: dateNotes[j]),
-                                    ),
-                                  );
+                                  timelineItems.add(_TimelineItem(
+                                    type: _TimelineItemType.note,
+                                    date: date,
+                                    dateIndex: i,
+                                    note: dateNotes[j],
+                                    noteIndex: j,
+                                  ));
                                   
-                                  // Add continuation arrow between consecutive notes on same day
+                                  // Add continuation arrow after note (except last)
                                   if (j < dateNotes.length - 1) {
-                                    items.add(
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 4),
-                                        child: ContinuationArrow(isVisible: true),
-                                      ),
-                                    );
+                                    timelineItems.add(_TimelineItem(
+                                      type: _TimelineItemType.arrow,
+                                      date: date,
+                                      dateIndex: i,
+                                      noteIndex: j,
+                                    ));
                                   }
                                 }
                               }
-                              
+
                               return ListView.builder(
                                 padding: const EdgeInsets.symmetric(vertical: 8),
-                                itemCount: items.length,
-                                itemBuilder: (context, index) => items[index],
+                                itemCount: timelineItems.length,
+                                itemBuilder: (context, index) {
+                                  final item = timelineItems[index];
+                                  
+                                  switch (item.type) {
+                                    case _TimelineItemType.header:
+                                      return DateGroupHeader(
+                                        date: item.date!,
+                                        noteCount: item.noteCount!,
+                                        showContinuation: item.showContinuation ?? false,
+                                      );
+                                    case _TimelineItemType.note:
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 6,
+                                        ),
+                                        child: _NoteTile(note: item.note!),
+                                      );
+                                    case _TimelineItemType.arrow:
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 4),
+                                        child: ContinuationArrow(isVisible: true),
+                                      );
+                                  }
+                                },
                               );
                             }
                             
@@ -433,6 +455,29 @@ class _NoteCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// Helper class for timeline items
+enum _TimelineItemType { header, note, arrow }
+
+class _TimelineItem {
+  final _TimelineItemType type;
+  final DateTime? date;
+  final int dateIndex;
+  final Note? note;
+  final int? noteIndex;
+  final int? noteCount;
+  final bool? showContinuation;
+
+  _TimelineItem({
+    required this.type,
+    this.date,
+    required this.dateIndex,
+    this.note,
+    this.noteIndex,
+    this.noteCount,
+    this.showContinuation,
+  });
 }
 
 class _EmptyState extends StatelessWidget {
