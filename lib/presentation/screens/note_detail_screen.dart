@@ -8,6 +8,7 @@ import '../../data/models/page.dart' as models;
 import '../blocs/pages/pages_bloc.dart';
 import '../../data/services/export_service.dart';
 import '../../data/services/pages_service.dart';
+import '../widgets/rough_work_toggle.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   const NoteDetailScreen({super.key, required this.id});
@@ -121,9 +122,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       );
     }
 
+    final mainPages = _pages.where((p) => !p.isRoughWork).toList();
+    final roughWorkPages = _pages.where((p) => p.isRoughWork).toList();
     final visiblePages = _showRoughWork
         ? _pages
-        : _pages.where((p) => !p.isRoughWork).toList();
+        : mainPages;
 
     return Scaffold(
       appBar: AppBar(
@@ -162,30 +165,28 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 child: const Text('Share'),
                 onTap: () => context.push('/collab/${widget.id}'),
               ),
-              if (_pages.any((p) => p.isRoughWork))
-                PopupMenuItem(
-                  child: Row(
-                    children: [
-                      const Text('Show rough work'),
-                      const Spacer(),
-                      Switch(
-                        value: _showRoughWork,
-                        onChanged: (value) {
-                          setState(() {
-                            _showRoughWork = value;
-                            _currentPageIndex = 0;
-                          });
-                          _pageController.jumpToPage(0);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
             ],
           ),
         ],
       ),
-      body: visiblePages.isEmpty
+      body: Column(
+        children: [
+          // Rough Work Toggle
+          if (roughWorkPages.isNotEmpty)
+            RoughWorkToggle(
+              showRoughWork: _showRoughWork,
+              onChanged: (value) {
+                setState(() {
+                  _showRoughWork = value;
+                  _currentPageIndex = 0;
+                });
+                _pageController.jumpToPage(0);
+              },
+              roughWorkCount: roughWorkPages.length,
+            ),
+          // Pages
+          Expanded(
+            child: visiblePages.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -210,7 +211,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 ],
               ),
             )
-          : PageView.builder(
+            : PageView.builder(
               controller: _pageController,
               itemCount: visiblePages.length,
               onPageChanged: (index) {

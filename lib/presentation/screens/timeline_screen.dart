@@ -6,7 +6,10 @@ import '../blocs/notes/notes_bloc.dart';
 import '../blocs/sync/sync_bloc.dart';
 import '../widgets/sync_status_banner.dart';
 import '../widgets/main_scaffold.dart';
+import '../widgets/date_group_header.dart';
+import '../widgets/continuation_arrow.dart';
 import '../../data/models/note.dart';
+import '../../data/services/daily_note_service.dart';
 
 class TimelineScreen extends StatelessWidget {
   const TimelineScreen({super.key});
@@ -95,6 +98,11 @@ class TimelineScreen extends StatelessWidget {
                       return _EmptyState();
                     }
 
+                    // Group notes by date
+                    final dailyNoteService = DailyNoteService();
+                    final groupedNotes = dailyNoteService.groupNotesByDate(state.notes);
+                    final sortedDates = groupedNotes.keys.toList()..sort((a, b) => b.compareTo(a));
+
                     return NotificationListener<ScrollNotification>(
                       onNotification: (n) {
                         if (state.hasMore &&
@@ -114,14 +122,63 @@ class TimelineScreen extends StatelessWidget {
                           builder: (context, constraints) {
                             final width = constraints.maxWidth;
                             final isGrid = width >= 800;
+                            
                             if (!isGrid) {
-                              return ListView.separated(
-                                padding: const EdgeInsets.all(16),
-                                itemCount: state.notes.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                itemBuilder: (context, index) => _NoteTile(note: state.notes[index]),
+                              // List view with date grouping
+                              final items = <Widget>[];
+                              
+                              for (var i = 0; i < sortedDates.length; i++) {
+                                final date = sortedDates[i];
+                                final dateNotes = groupedNotes[date]!;
+                                
+                                // Check if this date continues from previous
+                                final previousDate = i < sortedDates.length - 1
+                                    ? sortedDates[i + 1]
+                                    : null;
+                                final showContinuation = previousDate != null &&
+                                    date.difference(previousDate).inDays == 1;
+                                
+                                // Add date header
+                                items.add(
+                                  DateGroupHeader(
+                                    date: date,
+                                    noteCount: dateNotes.length,
+                                    showContinuation: showContinuation,
+                                  ),
+                                );
+                                
+                                // Add notes for this date
+                                for (var j = 0; j < dateNotes.length; j++) {
+                                  items.add(
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 6,
+                                      ),
+                                      child: _NoteTile(note: dateNotes[j]),
+                                    ),
+                                  );
+                                  
+                                  // Add continuation arrow between consecutive notes on same day
+                                  if (j < dateNotes.length - 1) {
+                                    items.add(
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 4),
+                                        child: ContinuationArrow(isVisible: true),
+                                      ),
+                                    );
+                                  }
+                                }
+                              }
+                              
+                              return ListView.builder(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                itemCount: items.length,
+                                itemBuilder: (context, index) => items[index],
                               );
                             }
+                            
+                            // Grid view (simpler, no date grouping for now)
                             final crossAxisCount = width >= 1200 ? 3 : 2;
                             return GridView.builder(
                               padding: const EdgeInsets.all(16),
