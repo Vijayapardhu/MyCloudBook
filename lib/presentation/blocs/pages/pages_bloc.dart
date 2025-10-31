@@ -160,7 +160,7 @@ class PagesBloc extends Bloc<PagesEvent, PagesState> {
       if (currentUser == null) {
         throw Exception('User not authenticated');
       }
-      final storagePath = 'images/${currentUser.id}/${event.noteId}/page_$nextPageNumber.webp';
+      final storagePath = '${currentUser.id}/${event.noteId}/page_$nextPageNumber.webp';
       
       final (publicUrl, path) = await _storageService.uploadBytes(
         bytes: compressed,

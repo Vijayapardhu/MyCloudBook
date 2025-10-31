@@ -23,7 +23,7 @@ class StorageService {
     required String path,
     String contentType = 'audio/m4a',
   }) async {
-    return uploadBytes(bytes: bytes, bucket: 'pages', path: path, contentType: contentType);
+    return uploadBytes(bytes: bytes, bucket: 'voice', path: path, contentType: contentType);
   }
 
   /// Download image bytes from URL using Dio
