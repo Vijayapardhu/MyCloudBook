@@ -6,7 +6,10 @@ import '../blocs/notes/notes_bloc.dart';
 import '../blocs/sync/sync_bloc.dart';
 import '../widgets/sync_status_banner.dart';
 import '../widgets/main_scaffold.dart';
+import '../widgets/date_group_header.dart';
+import '../widgets/continuation_arrow.dart';
 import '../../data/models/note.dart';
+import '../../data/services/daily_note_service.dart';
 
 class TimelineScreen extends StatelessWidget {
   const TimelineScreen({super.key});
@@ -95,6 +98,11 @@ class TimelineScreen extends StatelessWidget {
                       return _EmptyState();
                     }
 
+                    // Group notes by date
+                    final dailyNoteService = DailyNoteService();
+                    final groupedNotes = dailyNoteService.groupNotesByDate(state.notes);
+                    final sortedDates = groupedNotes.keys.toList()..sort((a, b) => b.compareTo(a));
+
                     return NotificationListener<ScrollNotification>(
                       onNotification: (n) {
                         if (state.hasMore &&
@@ -114,14 +122,85 @@ class TimelineScreen extends StatelessWidget {
                           builder: (context, constraints) {
                             final width = constraints.maxWidth;
                             final isGrid = width >= 800;
+                            
                             if (!isGrid) {
-                              return ListView.separated(
-                                padding: const EdgeInsets.all(16),
-                                itemCount: state.notes.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                itemBuilder: (context, index) => _NoteTile(note: state.notes[index]),
+                              // Build a flat list of timeline items
+                              final timelineItems = <_TimelineItem>[];
+                              
+                              for (var i = 0; i < sortedDates.length; i++) {
+                                final date = sortedDates[i];
+                                final dateNotes = groupedNotes[date]!;
+                                
+                                // Check if this date continues from previous
+                                final previousDate = i < sortedDates.length - 1
+                                    ? sortedDates[i + 1]
+                                    : null;
+                                final showContinuation = previousDate != null &&
+                                    date.difference(previousDate).inDays == 1;
+                                
+                                // Add date header
+                                timelineItems.add(_TimelineItem(
+                                  type: _TimelineItemType.header,
+                                  date: date,
+                                  dateIndex: i,
+                                  noteCount: dateNotes.length,
+                                  showContinuation: showContinuation,
+                                ));
+                                
+                                // Add notes for this date
+                                for (var j = 0; j < dateNotes.length; j++) {
+                                  timelineItems.add(_TimelineItem(
+                                    type: _TimelineItemType.note,
+                                    date: date,
+                                    dateIndex: i,
+                                    note: dateNotes[j],
+                                    noteIndex: j,
+                                  ));
+                                  
+                                  // Add continuation arrow after note (except last)
+                                  if (j < dateNotes.length - 1) {
+                                    timelineItems.add(_TimelineItem(
+                                      type: _TimelineItemType.arrow,
+                                      date: date,
+                                      dateIndex: i,
+                                      noteIndex: j,
+                                    ));
+                                  }
+                                }
+                              }
+
+                              return ListView.builder(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                itemCount: timelineItems.length,
+                                itemBuilder: (context, index) {
+                                  final item = timelineItems[index];
+                                  
+                                  switch (item.type) {
+                                    case _TimelineItemType.header:
+                                      return DateGroupHeader(
+                                        date: item.date!,
+                                        noteCount: item.noteCount!,
+                                        showContinuation: item.showContinuation ?? false,
+                                      );
+                                    case _TimelineItemType.note:
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 6,
+                                        ),
+                                        child: _NoteTile(note: item.note!),
+                                      );
+                                    case _TimelineItemType.arrow:
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 4),
+                                        child: ContinuationArrow(isVisible: true),
+                                      );
+                                  }
+                                },
                               );
                             }
+                            
+                            // Grid view (simpler, no date grouping for now)
                             final crossAxisCount = width >= 1200 ? 3 : 2;
                             return GridView.builder(
                               padding: const EdgeInsets.all(16),
@@ -376,6 +455,29 @@ class _NoteCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// Helper class for timeline items
+enum _TimelineItemType { header, note, arrow }
+
+class _TimelineItem {
+  final _TimelineItemType type;
+  final DateTime? date;
+  final int dateIndex;
+  final Note? note;
+  final int? noteIndex;
+  final int? noteCount;
+  final bool? showContinuation;
+
+  _TimelineItem({
+    required this.type,
+    this.date,
+    required this.dateIndex,
+    this.note,
+    this.noteIndex,
+    this.noteCount,
+    this.showContinuation,
+  });
 }
 
 class _EmptyState extends StatelessWidget {

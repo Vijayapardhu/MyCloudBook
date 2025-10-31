@@ -13,6 +13,7 @@ import '../blocs/pages/pages_bloc.dart';
 import '../blocs/ai/ai_bloc.dart';
 import '../blocs/quota/quota_bloc.dart';
 import '../widgets/ai_utilities_panel.dart';
+import '../widgets/rough_work_attachment_button.dart';
 import '../../data/models/page.dart' as models;
 import '../../data/services/storage_service.dart';
 import '../../core/utils/image_compressor.dart';
@@ -158,7 +159,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     }
   }
 
-  Future<void> _pickAndUploadImage() async {
+  Future<void> _pickAndUploadImage({bool isRoughWork = false}) async {
     if (_currentNoteId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please save the note first')),
@@ -197,7 +198,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       AddPage(
         noteId: _currentNoteId!,
         imageBytes: compressed,
-        isRoughWork: false,
+        isRoughWork: isRoughWork,
       ),
     );
   }
@@ -468,27 +469,70 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                           }
                           
                           if (state is PagesLoaded) {
-                            if (state.pages.isEmpty) {
-                              return const Text('No pages yet. Add images below.');
-                            }
+                            final mainPages = state.pages.where((p) => !p.isRoughWork).toList();
+                            final roughWorkPages = state.pages.where((p) => p.isRoughWork).toList();
                             
-                            return SizedBox(
-                              height: 150,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: state.pages.length,
-                                itemBuilder: (context, index) {
-                                  final page = state.pages[index];
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 12),
-                                    child: _PageThumbnail(
-                                      page: page,
-                                      onOCR: () => _processOCRForPage(page),
-                                      onSummary: () => _generateSummaryForPage(page),
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (state.pages.isEmpty)
+                                  const Text('No pages yet. Add images below.')
+                                else ...[
+                                  // Main pages
+                                  if (mainPages.isNotEmpty) ...[
+                                    const Text('Main Pages', style: TextStyle(fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 8),
+                                    SizedBox(
+                                      height: 150,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: mainPages.length,
+                                        itemBuilder: (context, index) {
+                                          final page = mainPages[index];
+                                          return Padding(
+                                            padding: const EdgeInsets.only(right: 12),
+                                            child: _PageThumbnail(
+                                              page: page,
+                                              onOCR: () => _processOCRForPage(page),
+                                              onSummary: () => _generateSummaryForPage(page),
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  );
-                                },
-                              ),
+                                  ],
+                                  // Rough work section
+                                  if (roughWorkPages.isNotEmpty) ...[
+                                    const SizedBox(height: 16),
+                                    const Text('Rough Work', style: TextStyle(fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 8),
+                                    SizedBox(
+                                      height: 150,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: roughWorkPages.length,
+                                        itemBuilder: (context, index) {
+                                          final page = roughWorkPages[index];
+                                          return Padding(
+                                            padding: const EdgeInsets.only(right: 12),
+                                            child: _PageThumbnail(
+                                              page: page,
+                                              onOCR: () => _processOCRForPage(page),
+                                              onSummary: () => _generateSummaryForPage(page),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 12),
+                                  // Rough work attachment button
+                                  RoughWorkAttachmentButton(
+                                    existingRoughWorkCount: roughWorkPages.length,
+                                    onPressed: () => _pickAndUploadImage(isRoughWork: true),
+                                  ),
+                                ],
+                              ],
                             );
                           }
                           
