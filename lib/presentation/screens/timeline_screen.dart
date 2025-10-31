@@ -1,331 +1,427 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../blocs/notes/notes_bloc.dart';
+import '../blocs/sync/sync_bloc.dart';
+import '../widgets/sync_status_banner.dart';
+import '../widgets/main_scaffold.dart';
 import '../../data/models/note.dart';
-import '../../data/services/notes_service.dart';
-import '../../data/services/sync_service.dart';
 
-class TimelineScreen extends StatefulWidget {
+class TimelineScreen extends StatelessWidget {
   const TimelineScreen({super.key});
 
   @override
-  State<TimelineScreen> createState() => _TimelineScreenState();
-}
+  Widget build(BuildContext context) {
+    return BlocProvider.value(
+      value: context.read<NotesBloc>()..add(const LoadNotes(page: 0)),
+      child: MainScaffold(
+        title: 'My Notes',
+        actions: [
+          IconButton(
+            tooltip: 'Retry sync',
+            onPressed: () {
+              context.read<SyncBloc>().add(const FlushQueue());
+            },
+            icon: const Icon(Icons.sync),
+          ),
+        ],
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => _showAddNoteDialog(context),
+          icon: const Icon(Icons.add),
+          label: const Text('New Note'),
+        ),
+        body: Column(
+          children: [
+            const SyncStatusBanner(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search notes...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onTap: () => context.go('/search'),
+                readOnly: true,
+              ),
+            ),
+            Expanded(
+              child: BlocBuilder<NotesBloc, NotesState>(
+                builder: (context, state) {
+                  if (state is NotesLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-class _TimelineScreenState extends State<TimelineScreen> {
-  static const String _notesBoxName = 'notes_box';
-  late final Box _notesBox;
-  bool _isReady = false;
-  final NotesService _notesService = NotesService();
-  final SyncService _syncService = SyncService();
-  List<Note> _notes = <Note>[];
-  bool _online = true;
-  bool _loading = true;
-  bool _loadingMore = false;
-  static const int _pageSize = 20;
-  int _offset = 0;
-  int _pendingSync = 0;
+                  if (state is NotesError) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error: ${state.message}',
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              context.read<NotesBloc>().add(const LoadNotes(page: 0));
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
 
-  @override
-  void initState() {
-    super.initState();
-    _openBox();
-    _watchConnectivity();
+                  if (state is NotesLoaded) {
+                    if (state.notes.isEmpty) {
+                      return _EmptyState();
+                    }
+
+                    return NotificationListener<ScrollNotification>(
+                      onNotification: (n) {
+                        if (state.hasMore &&
+                            !(state is NotesLoading) &&
+                            n.metrics.pixels >= n.metrics.maxScrollExtent - 200) {
+                          context.read<NotesBloc>().add(
+                            LoadNotes(page: (state.notes.length / 20).floor()),
+                          );
+                        }
+                        return false;
+                      },
+                      child: RefreshIndicator(
+                        onRefresh: () async {
+                          context.read<NotesBloc>().add(const LoadNotes(page: 0));
+                        },
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final width = constraints.maxWidth;
+                            final isGrid = width >= 800;
+                            if (!isGrid) {
+                              return ListView.separated(
+                                padding: const EdgeInsets.all(16),
+                                itemCount: state.notes.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                itemBuilder: (context, index) => _NoteTile(note: state.notes[index]),
+                              );
+                            }
+                            final crossAxisCount = width >= 1200 ? 3 : 2;
+                            return GridView.builder(
+                              padding: const EdgeInsets.all(16),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 1.2,
+                              ),
+                              itemCount: state.notes.length,
+                              itemBuilder: (_, i) => _NoteCard(note: state.notes[i]),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  }
+
+                  return const Center(child: CircularProgressIndicator());
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  Future<void> _openBox() async {
-    _notesBox = await Hive.openBox(_notesBoxName);
-    await _loadNotes(reset: true);
-    await _updatePending();
-    if (mounted) {
-      setState(() {
-        _isReady = true;
-        _loading = false;
-      });
-    }
-  }
-
-  void _watchConnectivity() {
-    Connectivity().onConnectivityChanged.listen((event) async {
-      final online = event != ConnectivityResult.none;
-      if (online && !_online) {
-        await _syncLocalToRemote();
-        await _syncService.flush();
-        await _loadNotes();
-        await _updatePending();
-      }
-      if (mounted) setState(() => _online = online);
-    });
-  }
-
-  Future<void> _loadNotes({bool reset = false}) async {
-    try {
-      if (Supabase.instance.client.auth.currentSession != null) {
-        if (reset) {
-          _offset = 0;
-          _notes = <Note>[];
-        }
-        final remote = await _notesService.fetchNotes();
-        // naive pagination client-side; replace with range() if needed
-        final slice = remote.skip(_offset).take(_pageSize).toList();
-        _offset += slice.length;
-        _notes = [..._notes, ...slice];
-        // cache
-        await _notesBox.put('list', remote.map((n) => n.toJson()).toList());
-      } else {
-        _notes = <Note>[];
-      }
-    } catch (_) {
-      final cached = (_notesBox.get('list') as List?)?.cast<Map<String, dynamic>>() ?? <Map<String, dynamic>>[];
-      _notes = cached.map(Note.fromJson).toList();
-    }
-    if (mounted) setState(() {});
-  }
-
-  Future<void> _addNote() async {
+  void _showAddNoteDialog(BuildContext context) {
     final controller = TextEditingController();
-    final title = await showDialog<String>(
+    showDialog<String>(
       context: context,
       builder: (context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text('New Note'),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
-              labelText: 'Title',
+              labelText: 'Note title',
+              hintText: 'Enter note title...',
             ),
+            autofocus: true,
+            onSubmitted: (value) => Navigator.of(context).pop(value),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
             ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-              child: const Text('Add'),
+            FilledButton(
+              onPressed: () {
+                final title = controller.text.trim();
+                Navigator.of(context).pop(title.isEmpty ? null : title);
+              },
+              child: const Text('Create'),
             ),
           ],
         );
       },
-    );
-
-    if (title == null || title.isEmpty) return;
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) return;
-
-    // optimistic local append
-    final temp = Note(
-      id: 'temp-${DateTime.now().millisecondsSinceEpoch}',
-      userId: userId,
-      title: title,
-      date: DateTime.now(),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      orderIndex: 0,
-    );
-    _notes = [temp, ..._notes];
-    setState(() {});
-
-    try {
-      final created = await _notesService.createNote(userId: userId, title: title);
-      _notes = [created, ..._notes.where((n) => n.id != temp.id).toList()];
-      await _notesBox.put('list', _notes.map((n) => n.toJson()).toList());
-    } catch (_) {
-      // enqueue for sync
-      await _syncService.enqueue(
-        entity: SyncEntity.note,
-        operation: SyncOperation.insert,
-        payload: temp.toJson(),
-      );
-      await _updatePending();
-    }
-    if (mounted) setState(() {});
+    ).then((title) {
+      if (title != null && title.isNotEmpty) {
+        context.read<NotesBloc>().add(CreateNote(title: title));
+        // Navigate to editor after a short delay
+        Future.delayed(const Duration(milliseconds: 500), () {
+          final notesState = context.read<NotesBloc>().state;
+          if (notesState is NotesLoaded && notesState.notes.isNotEmpty) {
+            context.go('/note/${notesState.notes.first.id}/edit');
+          }
+        });
+      }
+    });
   }
+}
 
-  Future<void> _deleteNote(String id) async {
-    // optimistic remove
-    final prev = _notes;
-    _notes = _notes.where((n) => n.id != id).toList();
-    setState(() {});
-    try {
-      await _notesService.deleteNote(id);
-      await _notesBox.put('list', _notes.map((n) => n.toJson()).toList());
-    } catch (_) {
-      _notes = prev;
-      if (mounted) setState(() {});
-    }
-  }
-
-  Future<void> _syncLocalToRemote() async {
-    // Kept for backward compatibility if any legacy items exist
-    final pending = (_notesBox.get('pending_inserts') as List?)?.cast<Map<String, dynamic>>() ?? <Map<String, dynamic>>[];
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null || pending.isEmpty) return;
-    for (final item in pending) {
-      try {
-        await _notesService.createNote(userId: userId, title: item['title'] as String?);
-      } catch (_) {}
-    }
-    await _notesBox.delete('pending_inserts');
-  }
+class _NoteTile extends StatelessWidget {
+  final Note note;
+  const _NoteTile({required this.note});
 
   @override
   Widget build(BuildContext context) {
-    if (!_isReady) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    final title = note.title ?? 'Untitled';
+    final updatedAt = (note.updatedAt ?? note.createdAt).toLocal();
+    final dateStr = '${updatedAt.day}/${updatedAt.month}/${updatedAt.year}';
 
-    final notes = _notes;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Timeline'),
-        actions: [
-          IconButton(
-            tooltip: 'Retry sync',
-            onPressed: () async {
-              await _syncService.flush();
-              await _loadNotes(reset: true);
-              await _updatePending();
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sync attempt finished')));
-            },
-            icon: const Icon(Icons.sync),
-          ),
-        ],
+    return Dismissible(
+      key: ValueKey(note.id),
+      background: Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Icon(Icons.delete, color: Colors.white),
       ),
-      body: _loading
-          ? const _ShimmerList()
-          : Column(
-              children: [
-                if (!_online || _pendingSync > 0)
-                  Container(
-                    width: double.infinity,
-                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Row(
-                      children: [
-                        Icon(_online ? Icons.sync_problem : Icons.wifi_off, size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _online
-                                ? 'Pending sync: $_pendingSync item(s)'
-                                : 'Offline. Changes will sync when online',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            await _syncService.flush();
-                            await _loadNotes(reset: true);
-                            await _updatePending();
-                          },
-                          child: const Text('Retry'),
-                        )
-                      ],
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      hintText: 'Search notes...',
-                      prefixIcon: Icon(Icons.search),
-                    ),
-                    onTap: () => Navigator.of(context).pushNamed('/search'),
-                    readOnly: true,
-                  ),
-                ),
-                Expanded(
-                  child: notes.isEmpty
-          ? const _EmptyState()
-          : NotificationListener<ScrollNotification>(
-              onNotification: (n) {
-                if (!_loadingMore && n.metrics.pixels >= n.metrics.maxScrollExtent - 200) {
-                  _loadingMore = true;
-                  _loadNotes().whenComplete(() => setState(() => _loadingMore = false));
-                }
-                return false;
-              },
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  setState(() => _loading = true);
-                  await _loadNotes(reset: true);
-                  setState(() => _loading = false);
-                },
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final width = constraints.maxWidth;
-                    final isGrid = width >= 800; // simple breakpoint for grid
-                    if (!isGrid) {
-                      return ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                        itemCount: notes.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) => _noteTile(notes[index]),
-                      );
-                    }
-                    final crossAxisCount = width >= 1200 ? 3 : 2;
-                    return GridView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 5 / 2,
-                      ),
-                      itemCount: notes.length,
-                      itemBuilder: (_, i) => _noteCard(notes[i]),
-                    );
-                  },
-                ),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Delete Note?'),
+            content: const Text('This action cannot be undone.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
               ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        );
+        return confirmed ?? false;
+      },
+      onDismissed: (_) {
+        context.read<NotesBloc>().add(DeleteNote(note.id));
+      },
+      child: Card(
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: InkWell(
+          onTap: () => context.go('/note/${note.id}'),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.note,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
                 ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            dateStr,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                 ),
               ],
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addNote,
-        child: const Icon(Icons.add),
+          ),
+        ),
       ),
     );
   }
+}
 
-  Future<void> _updatePending() async {
-    final size = await _syncService.queueSize();
-    if (mounted) setState(() => _pendingSync = size);
+class _NoteCard extends StatelessWidget {
+  final Note note;
+  const _NoteCard({required this.note});
+
+  @override
+  Widget build(BuildContext context) {
+    final title = note.title ?? 'Untitled';
+    final updatedAt = (note.updatedAt ?? note.createdAt).toLocal();
+    final dateStr = '${updatedAt.day}/${updatedAt.month}/${updatedAt.year}';
+
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () => context.go('/note/${note.id}'),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.note,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today,
+                    size: 12,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    dateStr,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.menu_book_outlined,
-              size: 72,
-              color: Theme.of(context).colorScheme.primary,
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.menu_book_outlined,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
-            const SizedBox(height: 16),
-            const Text(
+            const SizedBox(height: 24),
+            Text(
               'No notes yet',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Tap the + button to add your first note.',
+            Text(
+              'Start organizing your thoughts by creating your first note',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey,
+                  ),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: () {
+                // Trigger the add note dialog via the parent
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Create Note'),
             ),
           ],
         ),
@@ -333,78 +429,3 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
-
-class _ShimmerList extends StatelessWidget {
-  const _ShimmerList();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemBuilder: (_, __) => Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemCount: 8,
-    );
-  }
-}
-
-// Helpers for adaptive list/grid tiles
-Widget _noteTile(Note note) {
-  return Dismissible(
-    key: ValueKey(note.id),
-    background: Container(
-      color: Colors.red,
-      alignment: Alignment.centerRight,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: const Icon(Icons.delete, color: Colors.white),
-    ),
-    direction: DismissDirection.endToStart,
-    confirmDismiss: (_) async => true,
-    child: Builder(builder: (context) {
-      final title = note.title ?? 'Untitled';
-      final updatedAt = (note.updatedAt ?? note.createdAt).toLocal();
-      return ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        tileColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-        title: Text(title),
-        subtitle: Text('Updated: $updatedAt'),
-        leading: const Icon(Icons.note_outlined),
-        onTap: () {},
-      );
-    }),
-  );
-}
-
-Widget _noteCard(Note note) {
-  return Builder(builder: (context) {
-    final title = note.title ?? 'Untitled';
-    final updatedAt = (note.updatedAt ?? note.createdAt).toLocal();
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.note_outlined),
-                const SizedBox(width: 8),
-                Expanded(child: Text(title, style: Theme.of(context).textTheme.titleLarge, maxLines: 1, overflow: TextOverflow.ellipsis)),
-              ],
-            ),
-            const Spacer(),
-            Text('Updated: $updatedAt', style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ),
-      ),
-    );
-  });
-}
-
-

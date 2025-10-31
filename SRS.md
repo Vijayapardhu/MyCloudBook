@@ -214,5 +214,65 @@ Combines Flutter frontend, Supabase backend with PostgreSQL, and Google Gemini A
 
 ---
 
+## 10. Performance Requirements
+
+### 10.1 Response Times
+- App cold start: < 2 seconds on mid-range devices
+- Note page load: < 1 second for cached content
+- AI processing: < 5 seconds for batches up to 10 pages
+- Sync complete: < 30 seconds for 100 pending operations
+- Image upload: < 3 seconds for 5MB images on 4G connection
+
+### 10.2 Throughput
+- Support 1000 concurrent users (initial target)
+- Handle 100 note uploads per minute
+- Process 50 AI requests per minute (per user)
+- Sync 200 offline operations per batch
+
+### 10.3 Data Models
+
+#### Note Model
+- id (UUID), notebook_id (UUID), user_id (UUID)
+- title (text), date (date), order_index (integer)
+- has_rough_work (boolean), is_password_protected (boolean)
+- metadata (JSONB), created_at, updated_at
+
+#### Page Model
+- id (UUID), note_id (UUID), page_number (integer)
+- is_rough_work (boolean), image_url (text), storage_path (text)
+- ocr_text (text), ai_summary (text), tags (text[])
+- created_at, updated_at
+
+#### User Quota Model
+- user_id (UUID), tier ('free' | 'premium')
+- pages_uploaded_this_month (integer)
+- storage_used_bytes (bigint), api_calls_this_month (integer)
+- quota_reset_date (date)
+
+## 11. Testing Requirements
+
+### 11.1 Unit Testing
+- Target: ≥80% code coverage for business logic
+- All services and BLoCs must have unit tests
+- Mock external dependencies (Supabase, Gemini API)
+
+### 11.2 Integration Testing
+- API integration tests with local Supabase instance
+- Database transaction tests
+- AI service mock tests
+- Realtime subscription tests
+
+### 11.3 User Acceptance Testing
+- Beta testing with 50+ users recommended
+- Feature-specific UAT scripts
+- Performance benchmarking
+- Accessibility audits (WCAG compliance)
+
+### 11.4 Device Testing
+- Test on iOS 13+, Android 7+, modern browsers
+- Various screen sizes (phone, tablet, desktop)
+- Network conditions (2G, 3G, 4G, WiFi)
+- Offline scenarios
+
 *This SRS guides the development of MyCloudBook ensuring all features and UI/UX elements meet user needs in a secure, scalable, and user-friendly Flutter-based app integrated with Google Gemini AI.*
 

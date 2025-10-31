@@ -26,7 +26,7 @@ class PagesService {
       'ai_summary': aiSummary,
     };
     final inserted = await _client.from(table).insert(payload).select().single();
-    return inserted as Map<String, dynamic>;
+    return inserted;
   }
 
   Future<int> countPages(String noteId) async {
@@ -36,8 +36,8 @@ class PagesService {
         .eq('note_id', noteId)
         .order('page_number', ascending: false)
         .limit(1);
-    if (res is List && res.isNotEmpty) {
-      return (res.first as Map)['page_number'] as int;
+    if (res.isNotEmpty) {
+      return (res.first['page_number'] as int);
     }
     return 0;
   }

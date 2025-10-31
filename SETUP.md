@@ -286,3 +286,4 @@ For more help:
 ✅ **Gemini API**: User-provided keys (users control their own costs)  
 ✅ **Total Platform Cost**: $0
 
+

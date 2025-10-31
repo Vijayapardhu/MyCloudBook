@@ -206,3 +206,4 @@ The foundation is solid. Start building features and make MyCloudBook come to li
 
 **Next immediate step:** Set up Supabase and update `app_config.dart` with your credentials.
 
+

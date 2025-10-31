@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/config/app_config.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/screens/splash_screen.dart';
@@ -10,11 +11,23 @@ import 'presentation/screens/note_editor_screen.dart';
 import 'presentation/screens/search_screen.dart';
 import 'presentation/screens/settings_screen.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
+import 'presentation/blocs/notes/notes_bloc.dart';
+import 'presentation/blocs/pages/pages_bloc.dart';
+import 'presentation/blocs/search/search_bloc.dart';
+import 'presentation/blocs/collab/collab_bloc.dart';
+import 'presentation/blocs/chat/chat_bloc.dart';
+import 'presentation/blocs/quota/quota_bloc.dart';
+import 'presentation/blocs/sync/sync_bloc.dart';
+import 'presentation/blocs/ai/ai_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'presentation/screens/profile_screen.dart';
 import 'presentation/screens/onboarding_screen.dart';
 import 'presentation/screens/notifications_screen.dart';
+import 'presentation/screens/usage_dashboard_screen.dart';
+import 'presentation/screens/collaboration_screen.dart';
+import 'presentation/screens/notebook_scanner_screen.dart';
+import 'presentation/widgets/bottom_nav_bar.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class MyCloudBookApp extends StatelessWidget {
@@ -53,18 +66,39 @@ class MyCloudBookApp extends StatelessWidget {
         GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
         GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
         GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
+        GoRoute(path: '/usage', builder: (_, __) => const UsageDashboardScreen()),
+        GoRoute(
+          path: '/collab/:id',
+          builder: (_, s) => CollaborationScreen(noteId: s.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: '/notebook',
+          builder: (_, __) => const NotebookScannerScreen(),
+        ),
       ],
     );
 
     _ensureFcmToken();
 
-    return MaterialApp.router(
-      title: AppConfig.appName,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      routerConfig: router,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => NotesBloc()),
+        BlocProvider(create: (_) => PagesBloc()),
+        BlocProvider(create: (_) => SearchBloc()),
+        BlocProvider(create: (_) => CollabBloc()),
+        BlocProvider(create: (_) => ChatBloc()),
+        BlocProvider(create: (_) => QuotaBloc()),
+        BlocProvider(create: (_) => SyncBloc()),
+        BlocProvider(create: (_) => AIBloc()),
+      ],
+      child: MaterialApp.router(
+        title: AppConfig.appName,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
+        routerConfig: router,
+      ),
     );
   }
 
@@ -83,4 +117,3 @@ class MyCloudBookApp extends StatelessWidget {
     } catch (_) {}
   }
 }
-

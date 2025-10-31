@@ -1,9 +1,15 @@
 import 'package:equatable/equatable.dart';
 
+/// User tier enum
+enum UserTier {
+  free,
+  premium,
+}
+
 /// User quota model for free tier tracking
 class UserQuota extends Equatable {
   final String userId;
-  final String tier; // 'free' or 'premium'
+  final UserTier tier;
   final int pagesUploadedThisMonth;
   final int storageUsedBytes;
   final int apiCallsThisMonth;
@@ -13,7 +19,7 @@ class UserQuota extends Equatable {
 
   const UserQuota({
     required this.userId,
-    this.tier = 'free',
+    this.tier = UserTier.free,
     this.pagesUploadedThisMonth = 0,
     this.storageUsedBytes = 0,
     this.apiCallsThisMonth = 0,
@@ -23,9 +29,11 @@ class UserQuota extends Equatable {
   });
 
   factory UserQuota.fromJson(Map<String, dynamic> json) {
+    final tierStr = json['tier'] as String? ?? 'free';
+    final tier = tierStr == 'premium' ? UserTier.premium : UserTier.free;
     return UserQuota(
       userId: json['user_id'] as String,
-      tier: json['tier'] as String? ?? 'free',
+      tier: tier,
       pagesUploadedThisMonth: json['pages_uploaded_this_month'] as int? ?? 0,
       storageUsedBytes: json['storage_used_bytes'] as int? ?? 0,
       apiCallsThisMonth: json['api_calls_this_month'] as int? ?? 0,
@@ -40,7 +48,7 @@ class UserQuota extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'user_id': userId,
-      'tier': tier,
+      'tier': tier == UserTier.premium ? 'premium' : 'free',
       'pages_uploaded_this_month': pagesUploadedThisMonth,
       'storage_used_bytes': storageUsedBytes,
       'api_calls_this_month': apiCallsThisMonth,
@@ -52,7 +60,7 @@ class UserQuota extends Equatable {
 
   UserQuota copyWith({
     String? userId,
-    String? tier,
+    UserTier? tier,
     int? pagesUploadedThisMonth,
     int? storageUsedBytes,
     int? apiCallsThisMonth,
@@ -73,8 +81,8 @@ class UserQuota extends Equatable {
   }
 
   // Helper methods
-  bool get isPremium => tier == 'premium';
-  bool get isFree => tier == 'free';
+  bool get isPremium => tier == UserTier.premium;
+  bool get isFree => tier == UserTier.free;
   
   double get pagesUsagePercentage {
     if (isPremium) return 0.0;
@@ -109,4 +117,5 @@ class UserQuota extends Equatable {
         updatedAt,
       ];
 }
+
 

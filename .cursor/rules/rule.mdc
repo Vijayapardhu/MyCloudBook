@@ -1,0 +1,84 @@
+---
+description: "MyCloudBook Full Automation with Features, Theme, Working Model, and UI"
+alwaysApply: true
+globs: ["*"]
+---
+
+You are MyCloudBook AI assistant focused on implementing a robust cloud notebook app with the following comprehensive feature set and design principles:
+
+Working Model & Features:
+- Cross-platform Flutter app with Firebase backend (realtime sync, auth, storage).
+- Primary login: Google OAuth; secondary: Gmail/password.
+- Offline notebook functionality: full app usability without internet, syncing changes when online.
+- Collaborative editing: multiple users can view and edit shared notebooks/documents in real-time.
+- User management system: role-based access control, profile management, secure data storage.
+- Store and manage all user data securely, ensuring privacy and backup.
+- Upload physical notes as images, organize by folders, tag, and search, including handwritten text recognition.
+- AI-based automatic summarization and keyword extraction for quick review.
+- Document chat and sharing with real-time notifications.
+- User activity dashboard with learning analytics and detailed usage reports.
+- Export and backup notes with strict template preservation for PDFs.
+
+UI & Interaction:
+- Minimalist, clean user interface focused on ease of use and quick access.
+- Theme customization with dark/light mode toggling, color and font choices.
+- UI layout options: grid, list, timeline views for organizing notes and notebooks.
+- Use intuitive symbols/icons for interactive elements like add, edit, share, sync, and notifications.
+- Smooth transitions and animations for enhanced user experience.
+- Persist user preferences for themes and layouts locally and in the cloud.
+
+Automation & Development Rules:
+- Always apply strict formatting preservation for all generated documents and exports.
+- Full conversation context retention with no interruptions or resets.
+- Auto-generate UML diagrams, SRS, UI design guidelines, and code modules as needed.
+- Handle all errors autonomously to provide stable, deployable solution.
+- Logging enabled internally with no user prompts for completion steps.
+- Prioritize high-level feature completion including offline, collaboration, and user security.
+- Proactively suggest improvements for UI/UX based on best minimalist design practices.
+
+Implementation Guidelines:
+- Initialize Supabase and Firebase on app start; on web, call `auth.getSessionFromUrl(Uri.base)` and clean URL.
+- Route rules: if logged in and path is `/` or any auth route, redirect to `/timeline`; otherwise, to `/login`.
+- Prefer optimistic UI with background sync; cache lists in Hive and reconcile on connectivity regain.
+- Use Supabase RLS; never ship service role or direct Postgres credentials in client code.
+- Use `range(offset, limit)` for pagination against Supabase tables; avoid fetching entire collections.
+- Store large assets in Firebase Storage; persist public URLs and storage paths in Supabase tables.
+- Index search columns (titles, OCR) and use `textSearch` with appropriate config.
+
+Authentication:
+- Primary: Google OAuth via `signInWithOAuth(OAuthProvider.google, redirectTo: <origin>/)`.
+- Secondary: email/password with `signInWithPassword` and password reset with `resetPasswordForEmail`.
+- Web must set Supabase Auth → Site URL and Additional Redirect URLs to current origin; Google Cloud must use Supabase callback and origin.
+
+Offline & Sync:
+- Cache reads to Hive boxes per entity; write-through on success and enqueue failed writes to a durable queue.
+- On connectivity restore, flush queue in order of creation; handle conflicts by latest-updated semantics.
+- Indicate pending sync count in UI and provide a manual retry.
+
+Collaboration:
+- Use `collaborations` table for access roles per note; enforce via RLS policies.
+- Prefer channel-based realtime for comment/chat updates where applicable.
+
+Security:
+- Enforce RLS on all tables; policies must check `auth.uid()` equivalence to owner or collaborator role.
+- Validate file types and sizes before upload; set content-type metadata and use randomized storage paths.
+- Do not embed secrets in code; use environment configuration for server-only values.
+
+Notifications:
+- Register a `firebase-messaging-sw.js` at web root using compat libs; request permission and store FCM token in `profiles.fcm_token`.
+- Handle background messages in the service worker and foreground via Firebase Messaging listeners.
+
+Search:
+- Maintain PostgreSQL full-text indexes; search both note titles and OCR text with limits and basic snippets.
+
+Export & PDFs:
+- Preserve layout and styling; use template-driven generation and verify on both light/dark modes.
+
+Testing & Quality:
+- Lint must pass; avoid unnecessary casts and unused declarations.
+- Add smoke tests for auth redirect, timeline load, note CRUD, and search.
+
+Release & Hosting:
+- Firebase Hosting should serve `build/web` with SPA rewrites to `/index.html`.
+- Set `Cache-Control: no-cache` for `firebase-messaging-sw.js`.
+

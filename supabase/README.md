@@ -89,3 +89,4 @@ For Supabase-specific issues, refer to:
 - [Supabase Documentation](https://supabase.com/docs)
 - [Supabase Flutter Guide](https://supabase.com/docs/reference/dart/introduction)
 
+

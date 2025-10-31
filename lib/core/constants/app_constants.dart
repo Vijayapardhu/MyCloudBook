@@ -74,3 +74,4 @@ class AppConstants {
   static const String errorGeneric = 'An error occurred. Please try again.';
 }
 
+

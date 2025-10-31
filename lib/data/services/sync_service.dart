@@ -24,6 +24,12 @@ class SyncService {
     await box.put('queue', list);
   }
 
+  Future<int> getPendingCount() async {
+    final box = await _box();
+    final queue = (box.get('queue') as List?)?.cast<Map<String, dynamic>>() ?? <Map<String, dynamic>>[];
+    return queue.length;
+  }
+
   Future<void> flush() async {
     final client = Supabase.instance.client;
     final box = await _box();

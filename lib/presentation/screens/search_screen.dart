@@ -1,100 +1,115 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:async';
-import '../../data/services/search_service.dart';
+import '../blocs/search/search_bloc.dart';
+import '../widgets/main_scaffold.dart';
 
-class SearchScreen extends StatefulWidget {
+class SearchScreen extends StatelessWidget {
   const SearchScreen({super.key});
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
-}
-
-class _SearchScreenState extends State<SearchScreen> {
-  final _controller = TextEditingController();
-  final SearchService _searchService = SearchService();
-  final List<Map<String, dynamic>> _results = <Map<String, dynamic>>[];
-  Timer? _debounce;
-
-  void _onChanged(String value) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 250), () async {
-      final res = await _searchService.search(value);
-      if (!mounted) return;
-      setState(() {
-        _results
-          ..clear()
-          ..addAll(res);
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Search')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _controller,
+    final controller = TextEditingController();
+
+    return MainScaffold(
+      title: 'Search',
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: controller,
               decoration: const InputDecoration(
+                hintText: 'Search notes and pages...',
                 prefixIcon: Icon(Icons.search),
-                hintText: 'Search notes, pages, tags...',
               ),
-              onChanged: _onChanged,
+              autofocus: true,
+              onChanged: (value) {
+                context.read<SearchBloc>().add(QueryChanged(value));
+              },
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _results.isEmpty
-                  ? const Center(child: Text('No results'))
-                  : ListView(
+          ),
+          Expanded(
+            child: BlocBuilder<SearchBloc, SearchState>(
+              builder: (context, state) {
+                if (state is SearchInitial) {
+                  return const Center(
+                    child: Text('Enter a search query to find notes and pages'),
+                  );
+                }
+
+                if (state is SearchLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (state is SearchError) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        ..._buildGroup('Notes', 'note'),
-                        const SizedBox(height: 12),
-                        ..._buildGroup('Pages (OCR)', 'page'),
+                        Text('Error: ${state.message}'),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<SearchBloc>().add(ExecuteSearch(controller.text));
+                          },
+                          child: const Text('Retry'),
+                        ),
                       ],
                     ),
+                  );
+                }
+
+                if (state is SearchEmpty) {
+                  return Center(
+                    child: Text('No results found for "${state.query}"'),
+                  );
+                }
+
+                if (state is SearchResults) {
+                  if (state.results.isEmpty) {
+                    return const Center(child: Text('No results found'));
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: state.results.length,
+                    itemBuilder: (context, index) {
+                      final result = state.results[index];
+                      final type = result['type'] as String;
+                      final id = result['id'] as String;
+                      final title = result['title'] as String? ?? 'Untitled';
+                      final snippet = result['snippet'] as String?;
+
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: Icon(
+                            type == 'note' ? Icons.note : Icons.description,
+                          ),
+                          title: Text(title),
+                          subtitle: snippet != null ? Text(snippet) : null,
+                          onTap: () {
+                            if (type == 'note') {
+                              context.go('/note/$id');
+                            } else {
+                              final noteId = result['note_id'] as String?;
+                              if (noteId != null) {
+                                context.go('/note/$noteId');
+                              }
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  );
+                }
+
+                return const SizedBox.shrink();
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-
-  List<Widget> _buildGroup(String title, String type) {
-    final items = _results.where((e) => e['type'] == type).toList();
-    if (items.isEmpty) return <Widget>[];
-    return [
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Text(title, style: Theme.of(context).textTheme.titleLarge),
-      ),
-      ...List.generate(items.length, (index) {
-        final item = items[index];
-        final id = type == 'note' ? item['id'] as String : item['note_id'] as String;
-        return Column(
-          children: [
-            ListTile(
-              leading: Icon(type == 'note' ? Icons.note : Icons.image),
-              title: Text(item['title'] as String),
-              subtitle: Text(item['snippet'] as String? ?? ''),
-              onTap: () => context.go('/note/$id'),
-            ),
-            const Divider(height: 1),
-          ],
-        );
-      }),
-    ];
-  }
 }
-
-

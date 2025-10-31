@@ -106,3 +106,4 @@ class Note extends Equatable {
       ];
 }
 
+

@@ -352,6 +352,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to increment API calls counter
+CREATE OR REPLACE FUNCTION public.increment_api_calls(user_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.user_quotas
+  SET 
+    api_calls_this_month = api_calls_this_month + 1,
+    updated_at = NOW()
+  WHERE user_quotas.user_id = increment_api_calls.user_id;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Grant access to public schema
 GRANT USAGE ON SCHEMA public TO postgres, anon, authenticated, service_role;
+
 

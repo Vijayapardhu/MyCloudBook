@@ -64,3 +64,4 @@ class User extends Equatable {
   List<Object?> get props => [id, email, fullName, avatarUrl, createdAt, updatedAt];
 }
 
+
