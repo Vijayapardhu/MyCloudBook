@@ -27,7 +27,6 @@ import 'presentation/screens/notifications_screen.dart';
 import 'presentation/screens/usage_dashboard_screen.dart';
 import 'presentation/screens/collaboration_screen.dart';
 import 'presentation/screens/notebook_scanner_screen.dart';
-import 'presentation/widgets/bottom_nav_bar.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class MyCloudBookApp extends StatelessWidget {
@@ -44,7 +43,7 @@ class MyCloudBookApp extends StatelessWidget {
         final bool onAuth = state.uri.path == '/login' || state.uri.path == '/signup';
         final bool onRoot = state.uri.path == '/';
         if (!loggedIn && !onAuth) return '/login';
-        if (loggedIn && (onAuth || onRoot)) return '/timeline';
+        if (loggedIn && (onAuth || onRoot)) return '/usage';
         return null;
       },
       routes: [
@@ -106,6 +105,37 @@ class MyCloudBookApp extends StatelessWidget {
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) return;
+      // Ensure profile row exists (avoids FK errors on notes.user_id)
+      final maybeProfile = await Supabase.instance.client
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+      if (maybeProfile == null) {
+        await Supabase.instance.client.from('profiles').insert({
+          'id': user.id,
+          'email': user.email,
+          'full_name': user.userMetadata?['full_name'],
+        });
+      }
+      // Ensure user_quotas row exists
+      final maybeQuota = await Supabase.instance.client
+          .from('user_quotas')
+          .select('user_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+      if (maybeQuota == null) {
+        await Supabase.instance.client.from('user_quotas').insert({
+          'user_id': user.id,
+          'tier': 'free',
+          'quota_reset_date': DateTime.now()
+              .copyWith(day: 1)
+              .add(const Duration(days: 32))
+              .copyWith(day: 1)
+              .toIso8601String()
+              .split('T')[0],
+        });
+      }
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission();
       final token = await messaging.getToken();

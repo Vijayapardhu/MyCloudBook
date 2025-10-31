@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widgets/main_scaffold.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -61,8 +62,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+    return MainScaffold(
+      title: 'Profile',
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

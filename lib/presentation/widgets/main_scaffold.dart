@@ -45,10 +45,10 @@ class MainScaffold extends StatelessWidget {
         path.startsWith('/onboarding') ||
         path.startsWith('/note/') ||
         path.startsWith('/collab/') ||
-        path.startsWith('/settings') ||
-        path.startsWith('/usage')) {
+        path.startsWith('/settings')) {
       return false;
     }
+    // Show bottom nav on all other screens including /usage, /profile, /timeline, /search, /notebook, /notifications
     return true;
   }
 }

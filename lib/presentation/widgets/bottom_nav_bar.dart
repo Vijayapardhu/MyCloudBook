@@ -10,7 +10,8 @@ class BottomNavBar extends StatelessWidget {
   });
 
   int _getCurrentIndex() {
-    if (currentPath.startsWith('/timeline')) return 0;
+    if (currentPath.startsWith('/usage')) return 0;
+    if (currentPath.startsWith('/timeline')) return 0; // Timeline also maps to home for backward compatibility
     if (currentPath.startsWith('/search')) return 1;
     if (currentPath.startsWith('/notebook')) return 2;
     if (currentPath.startsWith('/notifications')) return 3;
@@ -21,8 +22,8 @@ class BottomNavBar extends StatelessWidget {
   void _onTap(BuildContext context, int index) {
     switch (index) {
       case 0:
-        if (!currentPath.startsWith('/timeline')) {
-          context.go('/timeline');
+        if (!currentPath.startsWith('/usage')) {
+          context.go('/usage');
         }
         break;
       case 1:
@@ -55,7 +56,7 @@ class BottomNavBar extends StatelessWidget {
         NavigationDestination(
           icon: Icon(Icons.home_outlined),
           selectedIcon: Icon(Icons.home),
-          label: 'Timeline',
+          label: 'Home',
         ),
         NavigationDestination(
           icon: Icon(Icons.search_outlined),

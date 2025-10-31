@@ -3,16 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/quota/quota_bloc.dart';
 import '../../data/models/quota.dart';
 import '../widgets/quota_progress_bar.dart';
+import '../widgets/main_scaffold.dart';
 
 class UsageDashboardScreen extends StatelessWidget {
   const UsageDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Usage Dashboard'),
-      ),
+    return MainScaffold(
+      title: 'Home Dashboard',
       body: BlocBuilder<QuotaBloc, QuotaState>(
         builder: (context, state) {
           // Trigger initial load if needed

@@ -114,46 +114,71 @@ class _NotebookScannerScreenState extends State<NotebookScannerScreen> {
   }
 
   Future<void> _scanPage() async {
-    if (_selectedNoteId == null) {
-      await _createDailyNotebookNote();
-      if (_selectedNoteId == null) return;
-    }
+    try {
+      if (_selectedNoteId == null) {
+        await _createDailyNotebookNote();
+        if (_selectedNoteId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not create a daily notebook.')),
+          );
+          return;
+        }
+      }
 
-    // Check quota
-    final quotaState = context.read<QuotaBloc>().state;
-    if (quotaState is QuotaExceeded) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Monthly quota exceeded. Please upgrade to premium.'),
-          duration: Duration(seconds: 4),
+      // Check quota
+      final quotaState = context.read<QuotaBloc>().state;
+      if (quotaState is QuotaExceeded) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Monthly quota exceeded. Please upgrade to premium.'),
+            duration: Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+
+      final picker = ImagePicker();
+      XFile? picked;
+      try {
+        picked = await picker.pickImage(source: ImageSource.camera);
+      } catch (_) {
+        // Some platforms (web/desktop) may not support camera; fallback to gallery
+      }
+
+      picked ??= await picker.pickImage(source: ImageSource.gallery);
+      if (picked == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No image selected')),
+        );
+        return;
+      }
+
+      final bytes = await picked.readAsBytes();
+      final compressed = await ImageCompressor.compressImage(
+        imageBytes: bytes,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        quality: 80,
+      );
+
+      // Add as rough work page
+      context.read<PagesBloc>().add(
+        AddPage(
+          noteId: _selectedNoteId!,
+          imageBytes: compressed,
+          isRoughWork: true,
         ),
       );
-      return;
+
+      // Reload pages after upload
+      Future.delayed(const Duration(seconds: 2), () => _loadPages());
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Scan failed: $e')),
+        );
+      }
     }
-
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.camera);
-    if (picked == null) return;
-
-    final bytes = await picked.readAsBytes();
-    final compressed = await ImageCompressor.compressImage(
-      imageBytes: bytes,
-      maxWidth: 1600,
-      maxHeight: 1600,
-      quality: 80,
-    );
-
-    // Add as rough work page
-    context.read<PagesBloc>().add(
-      AddPage(
-        noteId: _selectedNoteId!,
-        imageBytes: compressed,
-        isRoughWork: true,
-      ),
-    );
-
-    // Reload pages after upload
-    Future.delayed(const Duration(seconds: 2), () => _loadPages());
   }
 
   Future<void> _processOCR(models.Page page) async {
@@ -200,7 +225,7 @@ class _NotebookScannerScreenState extends State<NotebookScannerScreen> {
       final isDarkMode = Theme.of(context).brightness == Brightness.dark;
       
       // Create a temporary note ID list or use the selected note
-      final noteIds = _selectedNoteId != null ? [_selectedNoteId!] : [];
+      final List<String> noteIds = _selectedNoteId != null ? [_selectedNoteId!] : [];
       
       if (noteIds.isEmpty) {
         throw Exception('No note selected');
@@ -253,6 +278,10 @@ class _NotebookScannerScreenState extends State<NotebookScannerScreen> {
           });
         } else if (state is PageUploaded) {
           _loadPages();
+        } else if (state is PagesError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
         }
       },
       child: BlocListener<AIBloc, AIState>(
@@ -261,10 +290,11 @@ class _NotebookScannerScreenState extends State<NotebookScannerScreen> {
             // Find the page by ID - we'll use the first page for now
             if (_notebookPages.isNotEmpty) {
               final page = _notebookPages.first;
-            if (_pageControllers.containsKey(page.id)) {
-              _pageControllers[page.id]!.text = state.result.text;
+              if (_pageControllers.containsKey(page.id)) {
+                _pageControllers[page.id]!.text = state.result.text;
+              }
+              _updatePageText(page, state.result.text);
             }
-            _updatePageText(page, state.result.text);
             
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('OCR completed')),
